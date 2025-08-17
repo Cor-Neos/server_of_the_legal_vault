@@ -27,17 +27,40 @@ const upload = multer({
         }
         cb(null, true);
     },
-    limits: { fileSize: 5 * 1024 * 1024 } // 5MB max
+    limits: { fileSize: 20 * 1024 * 1024 } // 20MB max
 });
 
 //Routes 
 router.get('/tasks', verifyUser, requireAdmin, taskController.getTask);
+
+router.put(
+    '/tasks/:td_id', 
+    verifyUser, 
+    requireAdmin, 
+    upload.single('td_doc_path'), 
+    taskController.createTask
+);
 
 router.post(
     '/tasks', 
     verifyUser,
     upload.single('td_doc_path'),
     taskController.createTask
+);
+
+// New route for task attachments
+router.post(
+    '/tasks/upload',
+    verifyUser,
+    upload.single('file'),
+    taskController.uploadTaskAttachment
+);
+
+// Route to update task status
+router.patch(
+    '/tasks/:td_id/status',
+    verifyUser,
+    taskController.updateTaskStatus
 );
 
 export default router;
