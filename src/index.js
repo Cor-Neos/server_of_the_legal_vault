@@ -6,12 +6,9 @@ import authRoutes from "./routes/authRoute.js";
 import userRoutes from "./routes/userRoute.js";
 import branchRoutes from "./routes/branchRoute.js";
 import clientRoutes from "./routes/clientRoute.js";
-<<<<<<< HEAD
 import taskRoutes from "./routes/taskRoute.js";
-=======
 import caseRoutes from "./routes/caseRoute.js";
 import paymentRoutes from "./routes/paymentRoute.js";
->>>>>>> main
 
 const app = express();
 const port = 3000;
