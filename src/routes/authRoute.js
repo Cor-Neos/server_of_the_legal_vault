@@ -204,7 +204,7 @@ router.post("/logout", verifyUser, async (req, res) => {
 
 // Forget Password Route
 router.post("/forgot-password", async (req, res) => {
-  const { email } = req.body;
+  const { email, client_type } = req.body;
 
   try {
     const { rows } = await query(
@@ -222,8 +222,16 @@ router.post("/forgot-password", async (req, res) => {
       { expiresIn: "15m" }
     );
 
-    // Send email with reset link
-    const resetLink = `${process.env.CLIENT_URL}/change-password/${resetToken}`;
+    // Generate appropriate reset link based on client type
+    let resetLink;
+    if (client_type === 'mobile') {
+      // Mobile deep link
+      resetLink = `legalvaultmobile://change-password/${resetToken}`;
+    } else {
+      // Web link (default)
+      resetLink = `${process.env.CLIENT_URL}/change-password/${resetToken}`;
+    }
+    
     await sendResetLink(user.user_email, resetLink);
 
     res.json({
