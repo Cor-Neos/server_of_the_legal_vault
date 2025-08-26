@@ -35,7 +35,8 @@ app.use("/api", caseRoutes);
 app.use("/api", paymentRoutes);
 
 app.use("/api/", taskRoutes);
-app.use("/uploads", express.static("C:/Users/Khling/caps/uploads/uploads")); // user profile uploads
+// Serve upload directory (ensure single path). Adjust if actual path differs.
+app.use("/uploads", express.static("C:/Users/Khling/caps/uploads"));
 
 app.listen(port, "0.0.0.0", () => {
   console.log(`Listening on port ${port}`);

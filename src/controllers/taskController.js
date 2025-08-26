@@ -1,6 +1,8 @@
 import * as taskService from '../services/taskService.js';
 import path from 'path';
 import fs from 'fs';
+import { encryptFile, writeMetadata } from '../utils/encryption.js';
+import { decryptToStream, readMetadata } from '../utils/encryption.js';
 
 // Fetching all Tasks
 export const getTask = async (req, res) => {
@@ -55,24 +57,52 @@ export const uploadTaskAttachment = async (req, res) => {
             return res.status(400).json({ message: "Task ID is required" });
         }
 
-        const filePath = `/uploads/${req.file.filename}`;
+        // Paths setup
+        const rawUploadDir = path.dirname(req.file.path); // existing disk storage path
+        const encryptedDir = path.join(rawUploadDir, 'encrypted');
+        if (!fs.existsSync(encryptedDir)) fs.mkdirSync(encryptedDir, { recursive: true });
+
+        const encryptedFilename = req.file.filename + '.enc';
+        const encryptedFullPath = path.join(encryptedDir, encryptedFilename);
+        const metadataPath = encryptedFullPath + '.meta.json';
+
+        // Encrypt the uploaded file into encrypted directory
+        const meta = await encryptFile({ srcPath: req.file.path, destPath: encryptedFullPath });
+        // Persist metadata
+        writeMetadata(metadataPath, {
+            original: req.file.originalname,
+            stored: encryptedFilename,
+            mime: req.file.mimetype,
+            size: meta.size,
+            uploadedAt: new Date().toISOString(),
+            taskId,
+            iv: meta.iv,
+            tag: meta.tag,
+            encKey: meta.encKey,
+            wrapIV: meta.wrapIV,
+            wrapTag: meta.wrapTag,
+            checksum: meta.checksum
+        });
+
+        // Optionally delete original plaintext file after encryption
+        try { fs.unlinkSync(req.file.path); } catch (_) { /* ignore */ }
+
+        const storedPath = `/uploads/encrypted/${encryptedFilename}`; // logical path
         const currentDate = new Date().toISOString();
-        
-        // Update the task with the new attachment path and mark as completed
-        const updatedTask = await taskService.updateTaskAttachment(taskId, filePath, 'Completed', currentDate);
+        await taskService.updateTaskAttachment(taskId, storedPath, 'Completed', currentDate);
 
         res.status(200).json({
-            message: "File uploaded successfully",
-            filePath: filePath,
-            filename: req.file.filename,
+            message: "File uploaded & encrypted successfully",
+            filePath: storedPath,
+            filename: encryptedFilename,
             td_status: 'Completed',
             td_date_completed: currentDate
         });
     } catch (err) {
-        console.error("Error uploading task attachment:", err);
+        console.error("Error uploading task attachment (encryption phase):", err);
         res.status(500).json({ message: "Failed to upload task attachment" });
     }
-}
+};
 
 // Update task status
 export const updateTaskStatus = async (req, res) => {
@@ -95,3 +125,27 @@ export const updateTaskStatus = async (req, res) => {
         res.status(500).json({ message: "Failed to update task status" });
     }
 }
+
+// Decrypt & download task attachment
+export const downloadTaskAttachment = async (req, res) => {
+    try {
+        const { td_doc_path } = await taskService.getTaskById(req.params.taskId);
+        if (!td_doc_path) return res.status(404).json({ message: 'No attachment' });
+        // Map logical path to physical encrypted file
+        // Expected logical: /uploads/encrypted/<filename>.enc
+        const rootUpload = 'C:/Users/Khling/caps/uploads';
+        const relative = td_doc_path.replace('/uploads/', '');
+        const encryptedFullPath = path.join(rootUpload, relative);
+        const metaPath = encryptedFullPath + '.meta.json';
+        if (!fs.existsSync(encryptedFullPath) || !fs.existsSync(metaPath)) {
+            return res.status(404).json({ message: 'Encrypted file or metadata missing' });
+        }
+        const meta = readMetadata(metaPath);
+        res.setHeader('Content-Type', meta.mime || 'application/octet-stream');
+        res.setHeader('Content-Disposition', `attachment; filename="${meta.original || 'document'}"`);
+        await decryptToStream({ encryptedPath: encryptedFullPath, metadata: meta, writable: res });
+    } catch (err) {
+        console.error('Error downloading attachment:', err);
+        return res.status(500).json({ message: 'Failed to decrypt or stream attachment' });
+    }
+};

@@ -63,4 +63,11 @@ router.patch(
     taskController.updateTaskStatus
 );
 
+// Download (decrypt) task attachment
+router.get(
+    '/tasks/:taskId/attachment',
+    verifyUser,
+    taskController.downloadTaskAttachment
+);
+
 export default router;

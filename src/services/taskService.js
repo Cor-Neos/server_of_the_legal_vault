@@ -74,3 +74,9 @@ export const updateTaskStatus = async (taskId, status, completionDate = null) =>
     
     return rows[0];
 }
+
+export const getTaskById = async (taskId) => {
+    const { rows } = await query('SELECT * FROM task_document_tbl WHERE td_id = $1', [taskId]);
+    if (!rows.length) throw new Error('Task not found');
+    return rows[0];
+};
