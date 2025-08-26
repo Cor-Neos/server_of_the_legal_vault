@@ -6,7 +6,8 @@ import authRoutes from "./routes/authRoute.js";
 import userRoutes from "./routes/userRoute.js";
 import branchRoutes from "./routes/branchRoute.js";
 import clientRoutes from "./routes/clientRoute.js";
-import taskRoutes from "./routes/taskRoute.js"
+import caseRoutes from "./routes/caseRoute.js";
+import paymentRoutes from "./routes/paymentRoute.js";
 
 const app = express();
 const port = 3000;
@@ -19,7 +20,7 @@ app.use(
     origin: [
       "http://localhost:4000",
       "http://192.168.100.30:8081" 
-    ],                                                                                                                                                        
+    ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
@@ -29,6 +30,9 @@ app.use("/api", branchRoutes);
 app.use("/api", userRoutes);
 app.use("/api", clientRoutes);
 app.use("/api", authRoutes); // authentication api
+app.use("/api", caseRoutes);
+app.use("/api", paymentRoutes);
+
 app.use("/api/", taskRoutes);
 app.use("/uploads", express.static("C:/Users/Khling/caps/uploads/uploads")); // user profile uploads
 
