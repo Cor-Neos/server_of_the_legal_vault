@@ -3,12 +3,29 @@ import path from 'path';
 import fs from 'fs';
 import { encryptFile, writeMetadata } from '../utils/encryption.js';
 import { decryptToStream, readMetadata } from '../utils/encryption.js';
+import bcrypt from 'bcrypt';
 
 // Fetching all Tasks
 export const getTask = async (req, res) => {
     try {
         const tasks = await taskService.getTask();
-        res.status(200).json(tasks);
+        // Augment with passwordProtected flag if metadata present
+        const rootUpload = 'C:/Users/Khling/caps/uploads';
+        const augmented = tasks.map(t => {
+            try {
+                if (t.td_doc_path) {
+                    const relative = t.td_doc_path.replace('/uploads/', '');
+                    const encryptedFullPath = path.join(rootUpload, relative);
+                    const metaPath = encryptedFullPath + '.meta.json';
+                    if (fs.existsSync(metaPath)) {
+                        const meta = readMetadata(metaPath);
+                        return { ...t, password_protected: !!meta.passwordProtected };
+                    }
+                }
+            } catch (_) { /* ignore */ }
+            return { ...t, password_protected: false };
+        });
+        res.status(200).json(augmented);
     } catch (err) {
         console.error("Error fetching tasks", err);
         res.status(500).json({message: "Internal server error"});
@@ -68,6 +85,17 @@ export const uploadTaskAttachment = async (req, res) => {
 
         // Encrypt the uploaded file into encrypted directory
         const meta = await encryptFile({ srcPath: req.file.path, destPath: encryptedFullPath });
+
+        // Optional password protection
+        let passwordHash = null;
+        if (req.body.password && req.body.password.trim().length > 0) {
+            try {
+                passwordHash = await bcrypt.hash(req.body.password.trim(), 12);
+            } catch (e) {
+                console.error('Password hash error:', e);
+            }
+        }
+
         // Persist metadata
         writeMetadata(metadataPath, {
             original: req.file.originalname,
@@ -81,13 +109,15 @@ export const uploadTaskAttachment = async (req, res) => {
             encKey: meta.encKey,
             wrapIV: meta.wrapIV,
             wrapTag: meta.wrapTag,
-            checksum: meta.checksum
+            checksum: meta.checksum,
+            passwordProtected: !!passwordHash,
+            passwordHash
         });
 
         // Optionally delete original plaintext file after encryption
         try { fs.unlinkSync(req.file.path); } catch (_) { /* ignore */ }
 
-        const storedPath = `/uploads/encrypted/${encryptedFilename}`; // logical path
+        const storedPath = `/uploads/tasks/encrypted/${encryptedFilename}`; // logical path
         const currentDate = new Date().toISOString();
         await taskService.updateTaskAttachment(taskId, storedPath, 'Completed', currentDate);
 
@@ -96,7 +126,8 @@ export const uploadTaskAttachment = async (req, res) => {
             filePath: storedPath,
             filename: encryptedFilename,
             td_status: 'Completed',
-            td_date_completed: currentDate
+            td_date_completed: currentDate,
+            passwordProtected: !!passwordHash
         });
     } catch (err) {
         console.error("Error uploading task attachment (encryption phase):", err);
@@ -141,6 +172,12 @@ export const downloadTaskAttachment = async (req, res) => {
             return res.status(404).json({ message: 'Encrypted file or metadata missing' });
         }
         const meta = readMetadata(metaPath);
+        if (meta.passwordProtected) {
+            const provided = req.query.password || req.headers['x-doc-password'];
+            if (!provided) return res.status(401).json({ message: 'Password required' });
+            const ok = await bcrypt.compare(provided, meta.passwordHash || '');
+            if (!ok) return res.status(403).json({ message: 'Invalid password' });
+        }
         res.setHeader('Content-Type', meta.mime || 'application/octet-stream');
         res.setHeader('Content-Disposition', `attachment; filename="${meta.original || 'document'}"`);
         await decryptToStream({ encryptedPath: encryptedFullPath, metadata: meta, writable: res });

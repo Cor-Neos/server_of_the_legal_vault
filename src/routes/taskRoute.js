@@ -3,14 +3,14 @@ import multer from 'multer';
 import path from 'path';
 import * as taskController from '../controllers/taskController.js';
 import verifyUser from '../middleware/verifyUser.js';
-import requireAdmin from '../middleware/requireAdmin.js';
+
 
 const router = express.Router();
 
 // Multer setup for documents uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, "C:/Users/Khling/caps/uploads");
+        cb(null, "C:/Users/Khling/caps/uploads/tasks");
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + "-" + Math.round(Math.round() * 1e9);
@@ -31,12 +31,11 @@ const upload = multer({
 });
 
 //Routes 
-router.get('/tasks', verifyUser, requireAdmin, taskController.getTask);
+router.get('/tasks', verifyUser, taskController.getTask);
 
 router.put(
     '/tasks/:td_id', 
     verifyUser, 
-    requireAdmin, 
     upload.single('td_doc_path'), 
     taskController.createTask
 );
