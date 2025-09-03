@@ -6,6 +6,30 @@ export const getTask = async () => {
     return rows;
 };
 
+// NEW: Fetch only tasks that are NOT completed (pending / null / any status other than 'Completed')
+// This will be used by the mobile Active Tasks screen.
+export const getPendingTasks = async () => {
+    const { rows } = await query(`
+        SELECT *
+        FROM task_document_tbl
+        WHERE td_status IS NULL OR LOWER(td_status) <> 'completed'
+        ORDER BY td_due_date ASC NULLS LAST, td_id ASC
+    `);
+    return rows;
+};
+
+// NEW: Fetch only completed tasks (status exactly 'Completed' case-insensitive)
+// Used by the mobile Completed Tasks screen.
+export const getCompletedTasks = async () => {
+    const { rows } = await query(`
+        SELECT *
+        FROM task_document_tbl
+        WHERE LOWER(COALESCE(td_status, '')) = 'completed'
+        ORDER BY td_date_completed DESC NULLS LAST, td_id DESC
+    `);
+    return rows;
+};
+
 export const createTask = async (taskData) => {
     const {
         td_case_id,
@@ -20,9 +44,10 @@ export const createTask = async (taskData) => {
         td_date_completed,
     } = taskData;
 
+    // NOTE: Removed stray trailing comma after td_date_completed in column list to avoid SQL syntax error
     const { rows } = await query(
-        'INSERT INTO task_document_tbl (td_case_id, td_name, td_description, td_due_date, td_priority, td_doc_path, td_to, td_by, td_status, td_date_completed,) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
-        [        
+        'INSERT INTO task_document_tbl (td_case_id, td_name, td_description, td_due_date, td_priority, td_doc_path, td_to, td_by, td_status, td_date_completed) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
+        [
             td_case_id,
             td_name, 
             td_description, 

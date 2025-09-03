@@ -32,6 +32,9 @@ const upload = multer({
 
 //Routes 
 router.get('/tasks', verifyUser, taskController.getTask);
+// NEW: granular task collections for mobile app
+router.get('/tasks/pending', verifyUser, taskController.getPendingTasks); // returns tasks not yet completed
+router.get('/tasks/completed', verifyUser, taskController.getCompletedTasks); // returns completed tasks only
 
 router.put(
     '/tasks/:td_id', 

@@ -186,3 +186,25 @@ export const downloadTaskAttachment = async (req, res) => {
         return res.status(500).json({ message: 'Failed to decrypt or stream attachment' });
     }
 };
+
+// NEW: Return only pending (non-completed) tasks
+export const getPendingTasks = async (req, res) => {
+    try {
+        const tasks = await taskService.getPendingTasks();
+        res.status(200).json(tasks);
+    } catch (err) {
+        console.error('Error fetching pending tasks', err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+// NEW: Return only completed tasks
+export const getCompletedTasks = async (req, res) => {
+    try {
+        const tasks = await taskService.getCompletedTasks();
+        res.status(200).json(tasks);
+    } catch (err) {
+        console.error('Error fetching completed tasks', err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
