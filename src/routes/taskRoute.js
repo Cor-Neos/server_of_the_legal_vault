@@ -56,7 +56,7 @@ router.post(
 router.post(
     '/tasks/upload',
     verifyUser,
-    requireTaskCreator, // restrict upload (completing) to task creators roles
+    // requireTaskCreator, // restrict upload (completing) to task creators roles
     upload.single('file'),
     taskController.uploadTaskAttachment
 );
