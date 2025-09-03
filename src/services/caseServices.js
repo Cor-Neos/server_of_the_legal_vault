@@ -12,7 +12,7 @@ export const getCases = async () => {
     LEFT JOIN case_category_tbl cc ON c.cc_id = cc.cc_id
     LEFT JOIN cc_type_tbl ct ON c.ct_id = ct.ct_id
     LEFT JOIN branch_tbl b ON u.branch_id = b.branch_id
-    ORDER BY c.case_id;
+    ORDER BY c.case_date_created DESC;
   `;
   const { rows } = await query(queryStr);
   return rows;
@@ -28,7 +28,7 @@ export const getCaseById = async (caseId) => {
     LEFT JOIN case_category_tbl cc ON c.cc_id = cc.cc_id
     LEFT JOIN cc_type_tbl ct ON c.ct_id = ct.ct_id
     WHERE c.case_id = $1
-    ORDER BY c.case_id;
+    ORDER BY c.case_date_created DESC;
   `;
   const { rows } = await query(queryStr, [caseId]);
   return rows[0];
@@ -44,7 +44,7 @@ export const getCasesByUserId = async (userId) => {
     LEFT JOIN case_category_tbl cc ON c.cc_id = cc.cc_id
     LEFT JOIN cc_type_tbl ct ON c.ct_id = ct.ct_id
     LEFT JOIN branch_tbl b ON u.branch_id = b.branch_id
-    WHERE c.user_id = $1
+    WHERE c.user_id = $1 OR c.user_id IS NULL
     ORDER BY c.case_id;
   `;
   const { rows } = await query(queryStr, [userId]);
@@ -158,5 +158,23 @@ export const searchCases = async (searchTerm) => {
     ORDER BY c.case_id;
   `;
   const { rows } = await query(queryStr, [`%${searchTerm}%`]);
+  return rows;
+};
+
+// Case Categories and Types Services
+
+export const getCaseCategories = async () => {
+  const queryStr = `
+    SELECT * FROM case_category_tbl ORDER BY cc_id;
+  `;
+  const { rows } = await query(queryStr);
+  return rows;
+};
+
+export const getCaseCategoryTypes = async () => {
+  const queryStr = `
+    SELECT * FROM cc_type_tbl ORDER BY ct_id;
+  `;
+  const { rows } = await query(queryStr);
   return rows;
 };
