@@ -8,7 +8,7 @@ const router = express.Router();
 
 // Routes
 router.get("/clients", verifyUser, clientController.getClients);
-router.get("/all-clients", verifyUser, clientController.getAllClients); // only for ADMIN
+router.get("/all-clients", requireAdmin, verifyUser, clientController.getAllClients); // only for ADMIN
 router.post("/clients", verifyUser, clientController.createClient);
 router.put("/clients/:client_id", verifyUser, clientController.updateClient);
 router.delete(

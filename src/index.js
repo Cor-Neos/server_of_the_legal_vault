@@ -20,7 +20,9 @@ app.use(
   cors({
     origin: [
       "http://localhost:4000",
-      "http://192.168.100.30:8081" 
+      "http://localhost:8081",
+      "http://192.168.100.30:8081",
+      "http://10.229.178.126:8081" 
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
