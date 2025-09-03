@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import * as taskController from '../controllers/taskController.js';
 import verifyUser from '../middleware/verifyUser.js';
+import requireTaskCreator from '../middleware/requireTaskCreator.js';
 
 
 const router = express.Router();
@@ -46,6 +47,7 @@ router.put(
 router.post(
     '/tasks', 
     verifyUser,
+    requireTaskCreator, // Only Admin & Lawyer can create tasks
     upload.single('td_doc_path'),
     taskController.createTask
 );
@@ -54,6 +56,7 @@ router.post(
 router.post(
     '/tasks/upload',
     verifyUser,
+    requireTaskCreator, // restrict upload (completing) to task creators roles
     upload.single('file'),
     taskController.uploadTaskAttachment
 );
