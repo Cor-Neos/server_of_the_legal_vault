@@ -38,7 +38,7 @@ app.use("/api", paymentRoutes);
 
 app.use("/api/", taskRoutes);
 // Serve upload directory (ensure single path). Adjust if actual path differs.
-app.use("/uploads", express.static("C:/Users/Khling/caps/uploads"));
+app.use("/uploads", express.static("C:/Users/Noel Batoctoy/caps/uploads/profile_pictures"));
 
 app.listen(port, "0.0.0.0", () => {
   console.log(`Listening on port ${port}`);
