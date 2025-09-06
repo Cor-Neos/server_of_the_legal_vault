@@ -102,12 +102,13 @@ export const updateCase = async (caseId, caseData) => {
     client_id,
     cc_id,
     ct_id,
+    last_updated_by,
   } = caseData;
 
   const queryStr = `
     UPDATE case_tbl
-    SET case_last_updated = NOW(), case_status = $1, case_fee = $2, case_balance = $3, case_remarks = $4, case_cabinet = $5, case_drawer = $6, user_id = $7, client_id = $8, cc_id = $9, ct_id = $10
-    WHERE case_id = $11
+    SET case_last_updated = NOW(), case_status = $1, case_fee = $2, case_balance = $3, case_remarks = $4, case_cabinet = $5, case_drawer = $6, user_id = $7, client_id = $8, cc_id = $9, ct_id = $10, last_updated_by = $11
+    WHERE case_id = $12
     RETURNING *;
   `;
 
@@ -122,6 +123,7 @@ export const updateCase = async (caseId, caseData) => {
     client_id,
     cc_id,
     ct_id,
+    last_updated_by,
     caseId,
   ]);
 
@@ -205,6 +207,14 @@ export const getClientEmailById = async (clientId) => {
   `;
   const { rows } = await query(queryStr, [clientId]);
   return rows[0] ? rows[0].client_email : null;
+};
+
+export const getClientNameById = async (clientId) => {
+  const queryStr = `
+    SELECT client_fullname FROM client_tbl WHERE client_id = $1;
+  `;
+  const { rows } = await query(queryStr, [clientId]);
+  return rows[0] ? rows[0].client_fullname : null;
 };
 
 export const getCaseCategoryNameById = async (ccId) => {
