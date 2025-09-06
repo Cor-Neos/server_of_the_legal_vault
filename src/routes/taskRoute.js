@@ -11,7 +11,7 @@ const router = express.Router();
 // Multer setup for documents uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, "C:/Users/Khling/caps/uploads/tasks");
+        cb(null, "C:/Users/Noel Batoctoy/caps/uploads/taskDocs");
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + "-" + Math.round(Math.round() * 1e9);
