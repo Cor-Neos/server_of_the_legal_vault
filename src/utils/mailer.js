@@ -280,3 +280,30 @@ const generateResetEmailHTML = (link) => `<!doctype html>
   </table>
 </body>
 </html>`;
+
+// Case Creation notification email
+export const sendCaseCreationNotification = async (to, subject, text) => {
+  try {
+    await transporter.sendMail({
+      from: `"Legal Vault" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      text,
+    });
+  } catch (error) {
+    console.error("Error sending case creation notification:", error);
+  }
+};
+
+export const sendCaseUpdateNotification = async (to, subject, text) => {
+  try {
+    await transporter.sendMail({
+      from: `"Legal Vault" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      text,
+    });
+  } catch (error) {
+    console.error("Error sending case update notification:", error);
+  }
+};

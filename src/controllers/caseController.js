@@ -1,4 +1,8 @@
 import * as caseServices from "../services/caseServices.js";
+import {
+  sendCaseCreationNotification,
+  sendCaseUpdateNotification,
+} from "../utils/mailer.js";
 
 export const getCases = async (req, res) => {
   try {
@@ -41,6 +45,42 @@ export const createCase = async (req, res) => {
   try {
     const caseData = req.body;
     const newCase = await caseServices.createCase(caseData);
+
+    const user = await caseServices.getUserById(newCase.user_id);
+    const cc_name = await caseServices.getCaseCategoryNameById(newCase.cc_id);
+    const ct_name = await caseServices.getCaseTypeNameById(newCase.ct_id);
+    const client_email = await caseServices.getClientEmailById(
+      caseData.client_id
+    );
+    const admins = await caseServices.getAdmins();
+
+    // notifying all super lawyers or admins
+    admins.forEach((admin) => {
+      sendCaseCreationNotification(
+        admin.user_email,
+        "New Case Created",
+        `A new ${cc_name}: ${ct_name} was created by ${user.user_fname} ${
+          user.user_mname ? user.user_mname : ""
+        } ${user.user_lname}.`
+          .replace(/\s+/g, " ")
+          .trim()
+      );
+    });
+
+    // notifying the creator (lawyer or admin/super lawyer)
+    sendCaseCreationNotification(
+      user.user_email,
+      "Case Created Successfully",
+      `You have successfully created a new ${cc_name}: ${ct_name}.`
+    );
+
+    // notifying the client
+    sendCaseCreationNotification(
+      client_email,
+      "Case Successfully Created with BOS' Legal Vault",
+      `Your case, ${ct_name} (${cc_name}), has been successfully added in our system. Please contact your lawyer for more details.`
+    );
+
     res.status(201).json(newCase);
   } catch (err) {
     console.error("Error creating case", err);
@@ -54,6 +94,43 @@ export const updateCase = async (req, res) => {
     const caseData = req.body;
 
     const updatedCase = await caseServices.updateCase(caseId, caseData);
+
+    const user = await caseServices.getUserById(updatedCase.user_id);
+    const cc_name = await caseServices.getCaseCategoryNameById(
+      updatedCase.cc_id
+    );
+    const ct_name = await caseServices.getCaseTypeNameById(updatedCase.ct_id);
+    const client_email = await caseServices.getClientEmailById(
+      caseData.client_id
+    );
+    const admins = await caseServices.getAdmins();
+
+    // notifying all super lawyers or admins
+    admins.forEach((admin) => {
+      sendCaseUpdateNotification(
+        admin.user_email,
+        "Case Update",
+        `An update on ${cc_name}: ${ct_name} was done by ${user.user_fname} ${
+          user.user_mname ? user.user_mname : ""
+        } ${user.user_lname}.`
+          .replace(/\s+/g, " ")
+          .trim()
+      );
+    });
+
+    // notifying the one who updated (lawyer or admin/super lawyer)
+    sendCaseUpdateNotification(
+      user.user_email,
+      "Case Updated Successfully",
+      `You have successfully updated the ${cc_name}: ${ct_name}.`
+    );
+
+    // notifying the client
+    sendCaseUpdateNotification(
+      client_email,
+      "Case Successfully Updated in the BOS' Legal Vault",
+      `Your case, ${ct_name} (${cc_name}), has been successfully updated in our system. Please contact your lawyer for more details.`
+    );
 
     if (!updatedCase) {
       return res.status(404).json({ message: "Case not found" });
