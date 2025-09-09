@@ -21,7 +21,7 @@ app.use(
       "http://localhost:4000",
       "http://192.168.100.30:8081" 
     ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE",],
     credentials: true,
   })
 );
