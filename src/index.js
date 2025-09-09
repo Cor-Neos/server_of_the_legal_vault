@@ -8,6 +8,7 @@ import branchRoutes from "./routes/branchRoute.js";
 import clientRoutes from "./routes/clientRoute.js";
 import caseRoutes from "./routes/caseRoute.js";
 import paymentRoutes from "./routes/paymentRoute.js";
+import taskRoutes from "./routes/taskRoute.js";
 
 const app = express();
 const port = 3000;
