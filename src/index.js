@@ -9,6 +9,7 @@ import clientRoutes from "./routes/clientRoute.js";
 import taskRoutes from "./routes/taskRoute.js";
 import caseRoutes from "./routes/caseRoute.js";
 import paymentRoutes from "./routes/paymentRoute.js";
+import taskRoutes from "./routes/taskRoute.js";
 
 const app = express();
 const port = 3000;
@@ -24,7 +25,7 @@ app.use(
       "http://192.168.100.30:8081",
       "http://10.229.178.126:8081" 
     ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE",],
     credentials: true,
   })
 );
