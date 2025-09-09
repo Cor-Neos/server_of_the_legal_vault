@@ -9,7 +9,7 @@ import clientRoutes from "./routes/clientRoute.js";
 import taskRoutes from "./routes/taskRoute.js";
 import caseRoutes from "./routes/caseRoute.js";
 import paymentRoutes from "./routes/paymentRoute.js";
-import taskRoutes from "./routes/taskRoute.js";
+
 
 const app = express();
 const port = 3000;
@@ -39,6 +39,10 @@ app.use("/api", paymentRoutes);
 
 app.use("/api/", taskRoutes);
 // Serve upload directory (ensure single path). Adjust if actual path differs.
+// Static file serving:
+// - Keep existing mapping for profile pictures at /uploads
+// - Add explicit mapping for task documents at /uploads/taskDocs
+app.use("/uploads/taskDocs", express.static("C:/Users/Noel Batoctoy/caps/uploads/taskDocs"));
 app.use("/uploads", express.static("C:/Users/Noel Batoctoy/caps/uploads/profile_pictures"));
 
 app.listen(port, "0.0.0.0", () => {

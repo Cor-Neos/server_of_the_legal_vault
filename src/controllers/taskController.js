@@ -10,11 +10,13 @@ export const getTask = async (req, res) => {
     try {
         const tasks = await taskService.getTask();
         // Augment with passwordProtected flag if metadata present
-        const rootUpload = 'C:/Users/Khling/caps/uploads';
+    // Physical root for all uploads (profile_pictures, taskDocs, etc.)
+    const rootUpload = 'C:/Users/Noel Batoctoy/caps/uploads';
         const augmented = tasks.map(t => {
             try {
                 if (t.td_doc_path) {
-                    const relative = t.td_doc_path.replace('/uploads/', '');
+            // Convert logical "/uploads/..." path to a filesystem-relative path
+            const relative = t.td_doc_path.replace('/uploads/', '');
                     const encryptedFullPath = path.join(rootUpload, relative);
                     const metaPath = encryptedFullPath + '.meta.json';
                     if (fs.existsSync(metaPath)) {
@@ -37,7 +39,8 @@ export const createTask = async (req, res) => {
     try {
         const taskData = {
             ...req.body,
-            td_doc_path: req.file ? `/uploads/${req.file.filename}`: null,
+            // Store logical path that matches new taskDocs location
+            td_doc_path: req.file ? `/uploads/taskDocs/${req.file.filename}`: null,
         }
         const newTask = await taskService.createTask(taskData);
         res.status(201).json(newTask);
@@ -50,7 +53,8 @@ export const createTask = async (req, res) => {
 //Upload document
 export const uploadDocument = async (req, res) => {
     try {
-        const filePath = req.file ? `/uploads/${req.file.filename}` : null;
+    // Logical path reflecting the taskDocs directory
+    const filePath = req.file ? `/uploads/taskDocs/${req.file.filename}` : null;
         if (!filePath) {
             return res.status(400).json({ message: "No file uploaded" });
         }
@@ -117,7 +121,8 @@ export const uploadTaskAttachment = async (req, res) => {
         // Optionally delete original plaintext file after encryption
         try { fs.unlinkSync(req.file.path); } catch (_) { /* ignore */ }
 
-        const storedPath = `/uploads/tasks/encrypted/${encryptedFilename}`; // logical path
+    // Store logical path under /uploads/taskDocs/encrypted so it can be mapped back to disk
+    const storedPath = `/uploads/taskDocs/encrypted/${encryptedFilename}`; // logical path
         const currentDate = new Date().toISOString();
         await taskService.updateTaskAttachment(taskId, storedPath, 'Completed', currentDate);
 
@@ -163,9 +168,9 @@ export const downloadTaskAttachment = async (req, res) => {
         const { td_doc_path } = await taskService.getTaskById(req.params.taskId);
         if (!td_doc_path) return res.status(404).json({ message: 'No attachment' });
         // Map logical path to physical encrypted file
-        // Expected logical: /uploads/encrypted/<filename>.enc
-        const rootUpload = 'C:/Users/Khling/caps/uploads';
-        const relative = td_doc_path.replace('/uploads/', '');
+    // Expected logical: /uploads/taskDocs/encrypted/<filename>.enc
+    const rootUpload = 'C:/Users/Noel Batoctoy/caps/uploads';
+    const relative = td_doc_path.replace('/uploads/', '');
         const encryptedFullPath = path.join(rootUpload, relative);
         const metaPath = encryptedFullPath + '.meta.json';
         if (!fs.existsSync(encryptedFullPath) || !fs.existsSync(metaPath)) {

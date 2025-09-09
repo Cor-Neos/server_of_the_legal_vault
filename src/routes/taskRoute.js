@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 import * as taskController from '../controllers/taskController.js';
 import verifyUser from '../middleware/verifyUser.js';
 import requireTaskCreator from '../middleware/requireTaskCreator.js';
@@ -11,7 +12,13 @@ const router = express.Router();
 // Multer setup for documents uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, "C:/Users/Noel Batoctoy/caps/uploads/taskDocs");
+        const dest = "C:/Users/Noel Batoctoy/caps/uploads/taskDocs";
+        try {
+            if (!fs.existsSync(dest)) {
+                fs.mkdirSync(dest, { recursive: true });
+            }
+        } catch (_) { /* ignore mkdir errors */ }
+        cb(null, dest);
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + "-" + Math.round(Math.round() * 1e9);
