@@ -37,14 +37,14 @@ app.use("/api", paymentRoutes);
 app.use("/api", documentRoutes);
 
 app.use("/api/", taskRoutes);
-app.use("/uploads", express.static("C:/Users/Khling/caps/uploads/uploads")); // user profile uploads
+app.use("/uploads", express.static("C:/Users/Noel Batoctoy/caps/uploads/profile_pictures")); // user profile uploads
 app.use(
-  "/uploads/taskedDocs",
-  express.static("D:/Capstone_ni_Angelie/uploads/taskedDocs")
+  "/uploads/taskDocs",
+  express.static("C:/Users/Noel Batoctoy/caps/uploads/taskDocs")
 ); // tasked document uploads
 app.use(
   "/uploads/supportingDocs",
-  express.static("D:/Capstone_ni_Angelie/uploads/supportingDocs")
+  express.static("C:/Users/Noel Batoctoy/caps/uploads/supportingDocs")
 ); // supporting document uploads
 
 app.listen(port, "0.0.0.0", () => {
